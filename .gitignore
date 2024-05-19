@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Created by https://www.toptal.com/developers/gitignore/api/opencv,pythonvanilla,python,circuitpython
 # Edit at https://www.toptal.com/developers/gitignore?templates=opencv,pythonvanilla,python,circuitpython
 
@@ -188,6 +189,7 @@ poetry.toml
 # LSP config files
 pyrightconfig.json
 
+<<<<<<< HEAD
 ### PythonVanilla ###
 # Byte-compiled / optimized / DLL files
 
@@ -216,3 +218,6 @@ pyrightconfig.json
 
 
 # End of https://www.toptal.com/developers/gitignore/api/opencv,pythonvanilla,python,circuitpython
+=======
+# End of https://www.toptal.com/developers/gitignore/api/opencv,python
+>>>>>>> 763bdc6d20a30b1712d2ff054b363f659051d70a
