@@ -9,7 +9,9 @@ w = 960
 h = 720
 
 # carpeta en la que se almacenaran las imagenes
-clase = "azul"
+# "0" azul
+# "1" dorado 
+clase = "0"
 
 
 camara = Picamera2()
@@ -85,7 +87,8 @@ while True:
     cv2.imshow("Recorte", recorte)
     # Tecla de escape para salir de la captura
     key = cv2.waitKey(1) & 0xFF
-
+    
+    # Si presionamos la tecla p haremos una captura de la imagen
     if key == ord("p"):
         miUUID = str(uuid.uuid1())
         cv2.imwrite("./training_images/" + clase + "/" + miUUID + ".jpg", recorte)
