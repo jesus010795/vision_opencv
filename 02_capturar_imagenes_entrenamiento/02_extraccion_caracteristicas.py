@@ -3,6 +3,8 @@ import numpy as np
 import cv2
 import os
 from sklearn.svm import LinearSVC
+import pickle
+from time import sleep
 
 
 def cargar_imagen(ruta):
@@ -23,6 +25,12 @@ def extraer_color(img):
     # print("Caracteristicas obtenidas")
     return caracteristicas
 
+def prediccion(caracteristicas, modelo, img):
+    
+    prediccion = modelo.predict(caracteristicas)
+    cv2.putText(img, prediccion[0], (50,50), cv2.FONT_HERSHEY_SIMPLEX, 2, (0,255,0) )
+    return prediccion
+
 # Etiquetas de clase
 x = []
 y = []
@@ -42,7 +50,37 @@ for ruta in paths.list_images("./train"):
 
     y.append(ruta.split(os.path.sep)[-2])
     x.append(caracteristicas)
+# print(x)
+# print(y)
 
-print(x)
-print(y)
+#Convertimos las caracteristicas en un vector
+x = np.array(x)
+# Creamos el modelo
+sleep(0.5)
+modelo = LinearSVC(dual = True,C = 100.0, random_state=1, max_iter=40000)
+# Ejecutamos el entrenamiento
+sleep(0.5)
+modelo.fit(x,y)
+sleep(0.5)
+
+for ruta in paths.list_images("./test"):
+    # Iteramos sobre todas las imagenes que se encuentran en test
+    # Nos devolvera la clase original (0 o 1) y nos devolvera la prediccion (0 o 1)
+    img = cargar_imagen(ruta)
+    caracteristicas = extraer_color(img)
+    caracteristicas = np.array([caracteristicas])
+    # clase_verdadera = ruta.split(os.path.sep)[-2]
+    # resultado_clase= prediccion(caracteristicas, modelo)
+    resultado_img = prediccion(caracteristicas, modelo, img)
+    # print(f"Clase original: {clase_verdadera} - Prediccion: {resultado_clase} \n")
+    print(caracteristicas)
+    cv2.imshow("Prediccion", img)
+    cv2.waitKey()
+
+with open("modeloClasificador.pkl", "wb") as f:
+    pickle.dump(modelo, f)
+
+
+cv2.destroyAllWindows()
+
 print("Programa finalizado")
