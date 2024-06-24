@@ -8,8 +8,13 @@ import cv2
 import uuid
 import os
 import time
+import RPi.GPIO as gp
 
 import pickle
+
+gp.setmode(gp.BCM)
+gp.setup(21, gp.OUT)
+gp.setup(20, gp.IN)
 
 w = 620
 h = 480
@@ -26,9 +31,9 @@ camara.configure(camara.create_preview_configuration(
 )
 
 with camara.controls as controls:
-        controls.Brightness =  0.23
-        controls.Contrast = 1.42
-        controls.NoiseReductionMode = 2
+    controls.Brightness =  0.23
+    controls.Contrast = 1.42
+    controls.NoiseReductionMode = 2
 
 def eliminar_fotos(carpeta):
     for fichero in carpeta:
@@ -52,6 +57,12 @@ def cargar_imagen(ruta):
     # print("Imagen cargada")
     return img
 
+def mandar_pulso():
+    gp.output(21, gp.HIGH)
+    sleep(.5)
+    gp.output(21, gp.LOW)
+    sleep(.5)
+
 valores = {"0":"Buena", "1":"Mala"}
 
 with open("modeloClasificadorHistograma.pkl", "rb") as f:
@@ -60,8 +71,10 @@ with open("modeloClasificadorHistograma.pkl", "rb") as f:
 camara.start()
 
 while True:
+    valor = False
+    push_btn = gp.input(20)
     ruta_captura = ""
-    # print(ruta_captura)
+    contador = 0
     imagen = camara.capture_array()
     copia_imagen = imagen.copy()
 
@@ -78,7 +91,7 @@ while True:
         for contorno in contornos[0]:
             M = cv2.moments(contorno)
             # print(M['m00'])
-            if M['m00'] > 2000:
+            if M['m00'] > 500:
                 rect = cv2.minAreaRect(contorno)
                 box = cv2.boxPoints(rect)
                 box = box.astype(int)
@@ -100,50 +113,63 @@ while True:
                 copia_recorte = recorte
                 actual_recorte = cv2.warpPerspective(imagen, Mt, (300, 300))
 
-                if key == ord("p"):
-                    miUUID = str(uuid.uuid1())
-                    ruta_captura = "./capturas/" +  time.strftime("%Y%m%d-%H%M%S") + ".jpg" 
-                    cv2.imwrite(ruta_captura, recorte)
-                    print("Imagen capturada")
-
-                if ruta_captura != "":
-                    try:
-                        imagen_foto = cargar_imagen(ruta_captura)
-                        caracteristicas_tiempo_real = extraer_color(imagen_foto)
-                        caracteristicas_tiempo_real = np.array([caracteristicas_tiempo_real])
-                        resultado_prediccion = prediccion(modelo, caracteristicas_tiempo_real, valores)
-                        print(valores[resultado_prediccion])
-                        cx = int(M['m10'] / M['m00'])
-                        cy = int(M['m01'] / M['m00'])
-
-
-                        # ruta_captura = ""
-                    except:
-                        print("error")
-                
-                # cv2.putText(copia_imagen,valores[resultado_prediccion], (cx,cy), cv2.FONT_HERSHEY_COMPLEX,  0.8, (255,0,0), 2)
-
-            if valores[resultado_prediccion] == "Buena":
-                cv2.putText(copia_imagen,valores[resultado_prediccion], (cx,cy), cv2.FONT_HERSHEY_COMPLEX,  0.8, (255,0,0), 2)
-                cv2.drawContours(copia_imagen, [box], -1, (0,255,0), 2)
-
-            else:
-                cv2.drawContours(copia_imagen, [box], -1, (0,0,255), 2)
-                cv2.putText(copia_imagen,valores[resultado_prediccion], (cx,cy), cv2.FONT_HERSHEY_COMPLEX,  0.8, (255,0,0), 2)
-
-
+                # if key == ord("p"):
+                #     miUUID = str(uuid.uuid1())
+                #     ruta_captura = "./capturas/" +  time.strftime("%Y%m%d-%H%M%S") + ".jpg" 
+                #     cv2.imwrite(ruta_captura, recorte)
+                #     print("Imagen capturada")
         
+        if push_btn == gp.HIGH:
+            sleep(.5)
+            print("Boton presionado")
+            miUUID = str(uuid.uuid1())
+            ruta_captura = "./capturas/" +  time.strftime("%Y%m%d-%H%M%S") + ".jpg" 
+            cv2.imwrite(ruta_captura, recorte)
+            print("Imagen capturada")
+
+        if ruta_captura != "":
+            try:
+                imagen_foto = cargar_imagen(ruta_captura)
+                caracteristicas_tiempo_real = extraer_color(imagen_foto)
+                caracteristicas_tiempo_real = np.array([caracteristicas_tiempo_real])
+                resultado_prediccion = prediccion(modelo, caracteristicas_tiempo_real, valores)
+                print(valores[resultado_prediccion])
+                print(type(resultado_prediccion))
+                cx = int(M['m10'] / M['m00'])
+                cy = int(M['m01'] / M['m00'])
+            except:
+                print("error")
+        
+        resultado_str = valores[resultado_prediccion]
+        # print(resultado_prediccion)
+        if  resultado_str == "Buena" or resultado_str == "":
+            cv2.putText(copia_imagen,valores[resultado_prediccion], (cx,cy), cv2.FONT_HERSHEY_COMPLEX,  0.8, (255,0,0), 2)
+            cv2.drawContours(copia_imagen, [box], -1, (0,255,0), 2)
+            gp.output(21, gp.LOW)
+        else:
+            cv2.drawContours(copia_imagen, [box], -1, (0,0,255), 2)
+            cv2.putText(copia_imagen,valores[resultado_prediccion], (cx,cy), cv2.FONT_HERSHEY_COMPLEX,  0.8, (255,0,0), 2)
+            gp.output(21, gp.HIGH)
+
+           
     except:
          pass
 
+    # if contador > 0:
+    #     mandar_pulso()
+    #     contador = 0
+ 
+        # valor = nuevo_valor
+
     cv2.imshow("Contornos", copia_imagen)
-    cv2.imshow("Recorte", recorte)
+    # cv2.imshow("Recorte", recorte)
     # cv2.imshow("Contos", th)
     # camara.wait()
     key = cv2.waitKey(1) & 0xFF
     if key == ord("q"):        
         break
 
+gp.cleanup()
 cv2.destroyAllWindows()
 camara.close()
 
