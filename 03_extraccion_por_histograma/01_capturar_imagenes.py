@@ -11,7 +11,7 @@ h = 720
 # carpeta en la que se almacenaran las imagenes
 # "0" bueno
 # "1" malo 
-clase = "1"
+clase = "0"
 
 
 camara = Picamera2()
@@ -60,7 +60,7 @@ while True:
         contorno = contornos[0][0]
         M = cv2.moments(contorno)
         print(M['m00'])
-        if M['m00'] > 7000:
+        if M['m00'] > 1000:
             rect = cv2.minAreaRect(contorno)
             box = cv2.boxPoints(rect)
             box = box.astype(int)
