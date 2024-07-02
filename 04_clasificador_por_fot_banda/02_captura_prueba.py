@@ -22,18 +22,32 @@ camara.configure(camara.create_preview_configuration(
     })
 )
 
-print(camara.camera_controls)
+sleep(.5)
+# print(camara.camera_controls)
+camara.start()
+
+size = camara.capture_metadata()['ScalerCrop'][2:]
+full_res = camara.camera_properties['PixelArraySize']
+
+for _ in range(20):
+    # This syncs us to the arrival of a new camera frame:
+    # img = camara.capture_metadata()
+    # imagen = camara.capture_array()
+    size = [int(s * 0.95) for s in size]
+    offset = [(r - s) // 2 for r, s in zip(full_res, size)]
+    camara.set_controls({"ScalerCrop": offset + 
+    size})
+
 
 with camara.controls as controls:
-        controls.Brightness =  0.23
-        # controls.AnalogueGain = gain*.001
-        controls.Contrast = 1.42
-        controls.NoiseReductionMode = 2
-        # controls.Saturation = 2
-        # controls.ColourGains = 20
+    controls.Brightness =  0.3
+    # controls.AnalogueGain = gain*.001
+    # controls.Contrast = 1.42
+    controls.NoiseReductionMode = 1
+    # controls.Saturation = 2
+    # controls.ColourGains = 20
 
 sleep(0.3)
-camara.start()
 
 kernel = np.ones((23,23), np.uint8)
 
@@ -92,7 +106,7 @@ while True:
     # Si presionamos la tecla p haremos una captura de la imagen
     if key == ord("p"):
         miUUID = str(uuid.uuid1())
-        cv2.imwrite("./train/" + clase + "/" +  strftime("%Y-%m-%d--%H:%M:%S") + ".jpg", recorte)
+        cv2.imwrite("./test/" + clase + "/" +  strftime("%Y-%m-%d--%H:%M:%S") + ".jpg", recorte)
         print("Imagen capturada")
     if key == ord("q"):
         break

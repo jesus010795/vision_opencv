@@ -26,10 +26,24 @@ camara.configure(camara.create_preview_configuration(
         "size": (w, h)
     })
 )
+sleep(.5)
+camara.start()
+
+size = camara.capture_metadata()['ScalerCrop'][2:]
+full_res = camara.camera_properties['PixelArraySize']
+
+for _ in range(20):
+    # This syncs us to the arrival of a new camera frame:
+    # img = camara.capture_metadata()
+    # imagen = camara.capture_array()
+    size = [int(s * 0.95) for s in size]
+    offset = [(r - s) // 2 for r, s in zip(full_res, size)]
+    camara.set_controls({"ScalerCrop": offset + 
+    size})
 
 with camara.controls as controls:
-    controls.Brightness =  0.23
-    controls.Contrast = 1.42
+    controls.Brightness =  0.3
+    # controls.Contrast = 1.42
     controls.NoiseReductionMode = 2
 
 def eliminar_fotos(carpeta):
@@ -63,8 +77,6 @@ valores = {"0":"Buena", "1":"Mala"}
 
 with open("modeloClasificadorHistograma.pkl", "rb") as f:
      modelo = pickle.load(f)
-
-camara.start()
 
 while True:
     push_btn = gp.input(20)
