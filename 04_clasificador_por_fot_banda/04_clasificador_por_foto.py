@@ -100,11 +100,12 @@ while True:
                 ],  dtype = "float32")
 
                 Mt = cv2.getPerspectiveTransform(puntos_origen, puntos_destino)
+
                 recorte = cv2.warpPerspective(imagen, Mt, (300, 300))
 
         
         if push_btn == gp.HIGH:
-            sleep(.2)
+            sleep(.1)
             # print("Boton presionado")
             ruta_captura = "./capturas/" +  time.strftime("%Y%m%d-%H%M%S") + ".jpg" 
             cv2.imwrite(ruta_captura, recorte)

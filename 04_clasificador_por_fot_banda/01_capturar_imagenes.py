@@ -1,5 +1,5 @@
 from picamera2 import Picamera2
-from time import sleep
+from time import sleep, strftime
 import numpy as np
 import skimage
 import uuid
@@ -22,7 +22,6 @@ camara.configure(camara.create_preview_configuration(
     })
 )
 
-camara.start()
 print(camara.camera_controls)
 
 with camara.controls as controls:
@@ -34,6 +33,7 @@ with camara.controls as controls:
         # controls.ColourGains = 20
 
 sleep(0.3)
+camara.start()
 
 kernel = np.ones((23,23), np.uint8)
 
@@ -42,7 +42,7 @@ while True:
     copia_imagen = imagen.copy()
 
     # Este recorte correspondera al tamano de la imagen capturada
-    recorte = np.zeros((500,500), np.uint8)
+    # recorte = np.zeros((300,300), np.uint8)
 
     escala_grises = cv2.cvtColor(imagen, cv2.COLOR_BGR2GRAY)
     escala_grises = cv2.bilateralFilter(escala_grises, 3,25,25)
@@ -59,15 +59,15 @@ while True:
          # Se trabajara controno por contorno por medio de moments
         contorno = contornos[0][0]
         M = cv2.moments(contorno)
-        print(M['m00'])
+        # print(M['m00'])
         if M['m00'] > 1000:
             rect = cv2.minAreaRect(contorno)
             box = cv2.boxPoints(rect)
             box = box.astype(int)
             cv2.drawContours(copia_imagen, [box], -1, (0,255,0), 2)
 
-            width = int(rect[1][0])
-            height = int(rect[1][1])
+            # width = int(rect[1][0])
+            # height = int(rect[1][1])
 
             puntos_origen = box.astype("float32")
             puntos_destino = np.array([
@@ -84,14 +84,14 @@ while True:
 
     cv2.imshow("Binario", th)
     cv2.imshow("Contornos", copia_imagen)
-    cv2.imshow("Recorte", recorte)
+    # cv2.imshow("Recorte", recorte)
     # Tecla de escape para salir de la captura
     key = cv2.waitKey(1) & 0xFF
     
     # Si presionamos la tecla p haremos una captura de la imagen
     if key == ord("p"):
         miUUID = str(uuid.uuid1())
-        cv2.imwrite("./train/" + clase + "/" + miUUID + ".jpg", recorte)
+        cv2.imwrite("./train/" + clase + "/" +  strftime("%Y-%m-%d--%H:%M:%S") + ".jpg", recorte)
         print("Imagen capturada")
     if key == ord("q"):
         break
